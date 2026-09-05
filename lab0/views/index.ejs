@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Великие Цитаты</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Золотой фонд цитат</h1>
+      <p class="subtitle">Джейсон Стетхем, Шрек, Александр Лукашенко, Камина, Альберт Эйнштейн</p>
+    </header>
+    <% if (message === 'added') { %>
+      <div class="alert success">Цитата успешно добавлена!</div>
+    <% } else if (message === 'updated') { %>
+      <div class="alert success">Цитата успешно обновлена!</div>
+    <% } else if (message === 'deleted') { %>
+      <div class="alert info">Цитата удалена.</div>
+    <% } else if (message === 'error') { %>
+      <div class="alert error">Ошибка: текст цитаты и автор обязательны!</div>
+    <% } %>
+    <% if (randomQuote) { %>
+      <section class="card highlight-card">
+        <h2>Случайная мысль</h2>
+        <blockquote>«<%= randomQuote.text %>»</blockquote>
+        <div class="author">— <%= randomQuote.author %></div>
+      </section>
+    <% } %>
+    <section class="card">
+      <h2>Фильтр по автору</h2>
+      <form action="/" method="GET" class="filter-form">
+        <select name="author">
+          <option value="">Все авторы</option>
+          <% authors.forEach(function(item) { %>
+            <option value="<%= item %>" <%= selectedAuthor === item ? 'selected' : '' %>><%= item %></option>
+          <% }); %>
+        </select>
+        <button type="submit" class="btn">Применить</button>
+        <% if (selectedAuthor) { %><a href="/" class="btn btn-secondary">Сброс</a><% } %>
+      </form>
+    </section>
+    <% if (editQuote) { %>
+      <section class="card edit-card" id="form-section">
+        <h2>Редактировать цитату #<%= editQuote.id %></h2>
+        <form action="/quotes/update" method="POST" class="add-form">
+          <input type="hidden" name="id" value="<%= editQuote.id %>">
+          <div class="form-group">
+            <label for="edit-author">Автор:</label>
+            <select id="edit-author" name="author" required>
+              <% authors.forEach(function(item) { %>
+                <option value="<%= item %>" <%= editQuote.author === item ? 'selected' : '' %>><%= item %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-text">Текст цитаты:</label>
+            <textarea id="edit-text" name="text" rows="3" required><%= editQuote.text %></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="/" class="btn btn-secondary">Отмена</a>
+          </div>
+        </form>
+      </section>
+    <% } else { %>
+      <section class="card" id="form-section">
+        <h2>Добавить новую цитату</h2>
+        <form action="/quotes" method="POST" class="add-form">
+          <div class="form-group">
+            <label for="author">Автор:</label>
+            <select id="author" name="author" required>
+              <% authors.forEach(function(item) { %>
+                <option value="<%= item %>"><%= item %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="text">Текст цитаты:</label>
+            <textarea id="text" name="text" rows="3" placeholder="Введите слова мудрости..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Опубликовать</button>
+        </form>
+      </section>
+    <% } %>
+    <section>
+      <h2>Список цитат (<%= quotes.length %>)</h2>
+      <div class="quotes-grid">
+        <% if (quotes.length === 0) { %><p class="empty-text">Цитат не найдено.</p><% } %>
+        <% quotes.forEach(function(q) { %>
+          <div class="quote-card <%= (editQuote && editQuote.id === q.id) ? 'active-edit' : '' %>">
+            <blockquote>«<%= q.text %>»</blockquote>
+            <div class="quote-footer">
+              <span class="author-tag"><%= q.author %></span>
+              <div class="card-buttons">
+                <a href="/?edit=<%= q.id %>#form-section" class="btn-edit" title="Редактировать">✎</a>
+                <form action="/quotes/delete" method="POST" onsubmit="return confirm('Удалить эту цитату?');">
+                  <input type="hidden" name="id" value="<%= q.id %>">
+                  <button type="submit" class="btn-delete" title="Удалить">✕</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
