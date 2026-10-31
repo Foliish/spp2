@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Собрание цитат</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Собрание цитат</h1>
+      <p>Стетхем и другие авторы</p>
+    </header>
+
+    <main>
+      <p id="message" class="notice" role="status" aria-live="polite"></p>
+      <div id="workspace" class="layout">
+        <div>
+          <div id="list"></div>
+        </div>
+        <section id="editor">
+          <h2 id="form-title">Добавить цитату</h2>
+          <form id="quote-form">
+            <label>Цитата
+              <textarea name="text" minlength="3" maxlength="2000" required></textarea>
+            </label>
+            <label>Автор<input name="author" minlength="2" maxlength="100" required /></label>
+            <label>Категория<input name="category" minlength="2" maxlength="60" required /></label>
+            <label>Изображение до 2 МБ
+              <input name="image" type="file" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <label id="remove-image-label" hidden>
+              <input id="remove-image" type="checkbox" /> Удалить изображение
+            </label>
+            <div class="actions">
+              <button>Сохранить</button>
+              <button class="secondary" id="cancel" type="button">Отмена</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
