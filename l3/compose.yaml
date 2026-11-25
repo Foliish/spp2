@@ -1,0 +1,40 @@
+name: spp-clean-l3
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:3103:3103"
+    environment:
+      PORT: 3103
+      DATABASE_URL: postgres://quotes:quotes@db:5432/quotes
+      SMTP_HOST: "${SMTP_HOST:-smtp.gmail.com}"
+      SMTP_PORT: "${SMTP_PORT:-465}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
+      MAIL_FROM: "${MAIL_FROM:-}"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3103/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: quotes
+      POSTGRES_USER: quotes
+      POSTGRES_PASSWORD: quotes
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U quotes -d quotes"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+volumes:
+  postgres:

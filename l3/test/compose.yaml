@@ -1,0 +1,10 @@
+services:
+  test:
+    build:
+      context: .
+      target: test
+    environment:
+      DATABASE_URL: postgres://quotes:quotes@db:5432/quotes
+    depends_on:
+      db:
+        condition: service_healthy

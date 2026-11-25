@@ -1,0 +1,45 @@
+name: spp-clean-l5
+x-app: &app
+  image: spp-lab5:local
+  restart: unless-stopped
+  logging:
+    options: { max-size: "5m", max-file: "2" }
+services:
+  gateway:
+    <<: *app
+    build: .
+    ports: ["3105:3105"]
+    environment:
+      PORT: 3105
+      CATALOG_URL: http://catalog:3115/graphql
+      COLLECTION_URL: http://collection:3116/graphql
+    depends_on:
+      catalog: { condition: service_healthy }
+      collection: { condition: service_healthy }
+  catalog:
+    <<: *app
+    pull_policy: never
+    command: ["node", "catalog.js"]
+    environment:
+      PORT: 3115
+    volumes: ["catalog:/app/data"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3115/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 4s
+      timeout: 3s
+      retries: 15
+  collection:
+    <<: *app
+    pull_policy: never
+    command: ["node", "collection.js"]
+    environment:
+      PORT: 3116
+    volumes: ["collection:/app/data"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3116/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 4s
+      timeout: 3s
+      retries: 15
+volumes:
+  catalog:
+  collection:

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Кинокаталог</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header><h1>Кинокаталог</h1><p>Фильмы, сериалы и места съёмок</p></header>
+  <main>
+    <div class="actions views">
+      <button id="catalog-tab" aria-pressed="true">Каталог</button>
+      <button id="saved-tab" class="secondary" aria-pressed="false">Избранное</button>
+    </div>
+    <div class="layout">
+      <div>
+        <section id="filters">
+          <form id="search">
+            <label>Поиск по названию, месту или имени
+              <input name="text" maxlength="100" placeholder="Например, Transporter"></label>
+            <div class="fields">
+              <label>Тип <select name="kind"><option value="">Все</option><option value="MOVIE">Фильмы</option><option value="SERIES">Сериалы</option><option value="LOCATION">Места съёмок</option></select></label>
+              <label>Источник <select name="source" id="source"><option value="">Все</option></select></label>
+              <label>Жанр <select name="genre" id="genre"><option value="">Все</option></select></label>
+              <label>Год <input name="year" type="number" min="1800" max="2200" placeholder="Любой"></label>
+              <label>Сортировка <select name="order"><option value="TITLE_ASC">По названию</option><option value="NEWEST">Сначала новые</option><option value="RATING">По рейтингу</option></select></label>
+            </div>
+            <div class="actions"><button>Найти</button><button type="reset" class="secondary">Сбросить</button></div>
+          </form>
+        </section>
+        <p id="notice" class="notice" role="status"></p>
+        <div id="results"></div>
+        <nav class="actions" aria-label="Страницы" id="pagination" hidden>
+          <button class="secondary" id="prev">Назад</button><span id="page"></span><button class="secondary" id="next">Далее</button>
+        </nav>
+      </div>
+      <aside>
+        <section>
+          <h2 id="total">Источники</h2>
+          <ul id="sources"></ul>
+          <button id="refresh" class="secondary">Проверить обновления</button>
+        </section>
+        <section class="panel">
+          <h2>Поля запроса</h2>
+          <label><input type="checkbox" id="details" checked> Подробности</label>
+          <label><input type="checkbox" id="publisher"> Издатель источника</label>
+          <label><input type="checkbox" id="collection" checked> Статус избранного</label>
+          <details>
+            <summary>GraphQL-запрос</summary>
+            <pre id="query"></pre>
+            <small id="trace"></small>
+          </details>
+        </section>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Лётные шарики</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header><h1>Лётные шарики</h1><p>Пролетайте через ворота и сравнивайте результаты в реальном времени.</p></header>
+  <main>
+    <p id="status" class="notice" role="status"></p>
+    <section id="entry">
+      <h2>Войти в игру</h2>
+      <form id="join" class="toolbar">
+        <label>Имя игрока <input name="nickname" minlength="2" maxlength="24" required autocomplete="nickname"></label>
+        <button>Играть</button>
+      </form>
+    </section>
+    <div id="game" class="layout" hidden>
+      <section>
+        <div class="game-head">
+          <h2>Трасса</h2><strong id="score">0 ворот</strong>
+        </div>
+        <canvas id="track" width="900" height="420" aria-label="Трасса с шариками и воротами"></canvas>
+        <p id="hint"></p>
+        <div class="actions">
+          <button id="flap">Старт</button><button id="leave" class="secondary">Выйти</button>
+        </div>
+      </section>
+      <section>
+        <h2>Рекорды</h2>
+        <ol id="leaders"></ol>
+        <small>Цветные точки отмечают игроков на связи. Для двух игроков откройте игру во втором браузере или в приватном окне.</small>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Собрание цитат</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Собрание цитат</h1>
+      <p>Стетхем и другие авторы</p>
+      <nav id="account" aria-label="Аккаунт" hidden>
+        <span id="account-name"></span>
+        <button id="show-quotes" class="secondary" type="button">Цитаты</button>
+        <button id="show-sessions" class="secondary" type="button">Подключения</button>
+        <button id="show-users" class="secondary" type="button" hidden>Пользователи</button>
+        <button id="logout" class="secondary" type="button">Выйти</button>
+      </nav>
+    </header>
+
+    <main>
+      <p id="message" class="notice" role="status" aria-live="polite"></p>
+      <section id="login" class="entry">
+        <h2>Вход по email</h2>
+        <form id="email-form">
+          <label>Email <input name="email" type="email" autocomplete="email" required /></label>
+          <button id="send-code">Получить код</button>
+        </form>
+        <form id="code-form" hidden>
+          <p>
+            Код отправлен на <strong id="code-email"></strong>. Проверьте входящие и папку «Спам».
+          </p>
+          <label
+            >Шестизначный код
+            <input name="code" inputmode="numeric" autocomplete="one-time-code" required
+          /></label>
+          <div class="actions">
+            <button id="verify-code">Войти</button>
+            <button id="resend-code" class="secondary" type="button">Отправить ещё раз</button>
+            <button id="change-email" class="secondary" type="button">Изменить email</button>
+          </div>
+        </form>
+      </section>
+
+      <div id="workspace" class="layout" hidden>
+        <div>
+          <form id="search" class="toolbar">
+            <input
+              name="q"
+              type="search"
+              placeholder="Найти цитату или автора"
+              aria-label="Поиск"
+            />
+            <button class="secondary">Найти</button>
+          </form>
+          <div id="list"></div>
+        </div>
+        <section id="editor" hidden>
+          <h2 id="form-title">Добавить цитату</h2>
+          <form id="quote-form">
+            <label>Цитата <textarea name="text" required></textarea></label>
+            <label>Автор <input name="author" required /></label>
+            <label>Категория <input name="category" required /></label>
+            <label
+              >Изображение до 2 МБ
+              <input name="image" type="file" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <label id="remove-image-label" hidden>
+              <input id="remove-image" type="checkbox" /> Удалить изображение
+            </label>
+            <div class="actions">
+              <button>Сохранить</button>
+              <button id="cancel" class="secondary" type="button">Отмена</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <section id="sessions" hidden>
+        <h2>Активные подключения</h2>
+        <div id="session-list"></div>
+      </section>
+      <section id="users" hidden>
+        <h2>Пользователи</h2>
+        <div id="user-list"></div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+name: Lab 3
+on:
+  push:
+    paths: ["l3/**", ".github/workflows/lab3.yml"]
+  pull_request:
+    paths: ["l3/**", ".github/workflows/lab3.yml"]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: l3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run check
+      - run: docker compose -p quotes-test -f compose.yaml -f test/compose.yaml run --build --rm test
+      - if: always()
+        run: docker compose -p quotes-test -f compose.yaml -f test/compose.yaml down -v

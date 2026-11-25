@@ -1,0 +1,41 @@
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(120) UNIQUE NOT NULL,
+  role VARCHAR(12) NOT NULL CHECK (role IN ('reader', 'editor', 'admin'))
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash CHAR(64) UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  last_seen TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ip TEXT NOT NULL,
+  agent TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS sessions_user_id ON sessions (user_id);
+
+CREATE TABLE IF NOT EXISTS login_codes (
+  email VARCHAR(120) PRIMARY KEY,
+  digest CHAR(64) NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS attempts (
+  bucket TEXT PRIMARY KEY,
+  since TIMESTAMPTZ NOT NULL DEFAULT now(),
+  hits INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS quotes (
+  id SERIAL PRIMARY KEY,
+  text TEXT NOT NULL,
+  author VARCHAR(100) NOT NULL,
+  category VARCHAR(60) NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  image_key UUID UNIQUE,
+  image_type TEXT,
+  image_bytes BYTEA
+);

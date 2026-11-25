@@ -1,0 +1,23 @@
+services:
+  app:
+    environment:
+      SMTP_HOST: mail
+      SMTP_PORT: 1025
+      SMTP_USER: demo@jason.test
+      SMTP_PASSWORD: local-demo
+      SMTP_REQUIRE_TLS: "0"
+      MAIL_FROM: demo@jason.test
+      ADMIN_EMAIL: admin@jason.test
+      DEMO_EMAILS: "admin@jason.test,editor@jason.test,reader@jason.test"
+    depends_on:
+      mail:
+        condition: service_started
+  mail:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      MP_MAX_MESSAGES: 30
+    restart: unless-stopped

@@ -1,0 +1,23 @@
+{
+  "name": "spp-l3",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check db.js && node --check http.js && node --check quotes.js && node --check auth.js && node --check public/app.js",
+    "test": "node --test test/api.test.js"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "multer": "2.5.0",
+    "nodemailer": "10.5.0",
+    "pg": "8.16.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "smtp-server": "3.21.4"
+  }
+}

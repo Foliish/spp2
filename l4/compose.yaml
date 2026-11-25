@@ -1,0 +1,16 @@
+name: spp-clean-l4
+services:
+  app:
+    build: .
+    ports:
+      - "3104:3104"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3104
+      DATA_DIR: /app/data
+      ALLOWED_ORIGIN: "${ALLOWED_ORIGIN:-}"
+    volumes:
+      - game:/app/data
+    restart: unless-stopped
+volumes:
+  game:
