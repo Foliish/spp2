@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { WebSocket, WebSocketServer } from "ws";
-import { advance, FLAP_INTERVAL, lift, newRun, STEP } from "./game.js";
+import { advance, newRun, STEP } from "./game.js";
 
 const data = process.env.DATA_DIR || "data";
 const file = join(data, "flight.json");
@@ -59,7 +59,7 @@ function save() {
 
 const send = (socket, value) => {
   if (socket.readyState === WebSocket.OPEN && socket.bufferedAmount < 64_000)
-    socket.send(typeof value === "string" ? value : JSON.stringify(value));
+    socket.send(JSON.stringify(value));
 };
 function broadcast() {
   const visible = [...active.keys()].map((p) => ({
@@ -77,9 +77,8 @@ function broadcast() {
     )
     .slice(0, 10)
     .map((p) => ({ id: p.id, name: p.name, color: p.color, best: p.best, online: active.has(p) }));
-  const state = JSON.stringify({ type: "state", visible, leaders });
   for (const sockets of active.values()) {
-    for (const socket of sockets) send(socket, state);
+    for (const socket of sockets) send(socket, { type: "state", visible, leaders });
   }
 }
 server.on("upgrade", (req, socket, head) => {
@@ -154,13 +153,12 @@ wss.on("connection", (socket) => {
       });
       return;
     }
-    const now = Date.now();
-    if (now - lastFlap < FLAP_INTERVAL) {
-      send(socket, { type: "throttled" });
-      return;
-    }
-    lastFlap = now;
-    lift(run);
+    if (Date.now() - lastFlap < 90) return;
+    lastFlap = Date.now();
+    if (run.phase === "over") Object.assign(run, { ...newRun(), version: run.version });
+    run.phase = "flying";
+    run.vy = -245;
+    run.version++;
     socket.checkpoint = { run: { ...run }, best: player.best };
     dirty = true;
     broadcast();
@@ -201,16 +199,13 @@ const sync = setInterval(() => {
 }, 45);
 const checkpoint = setInterval(save, 500);
 const heartbeat = setInterval(() => {
-  const now = Date.now();
   for (const ws of wss.clients) {
-    if (!ws.alive) {
-      if (now - ws.lastPing >= 2600) ws.terminate();
-      continue;
+    if (!ws.alive) ws.terminate();
+    else {
+      ws.alive = false;
+      if (ws.player) ws.pingState = { run: { ...ws.player.run }, best: ws.player.best };
+      ws.ping();
     }
-    ws.alive = false;
-    ws.lastPing = now;
-    if (ws.player) ws.pingState = { run: { ...ws.player.run }, best: ws.player.best };
-    ws.ping();
   }
 }, 650);
 
