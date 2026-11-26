@@ -76,6 +76,10 @@ test("два игрока, конфликт одного профиля, пау�
     const a = await player({ name: "Алиса" });
     const b = await player({ name: "Борис" });
     await a.state((p, m) => m.visible.length === 2);
+    b.send({ type: "flap", version: 0 });
+    b.send({ type: "flap", version: 1 });
+    await b.receive(m => m.type === "throttled");
+    await b.state(p => p.version === 1);
     const secondTab = await player({ token: a.token });
     const { x } = (await a.state(p => p.phase === "ready")).visible.find(p => p.id === a.id);
     a.send({ type: "flap", version: 0 });

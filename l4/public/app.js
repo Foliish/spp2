@@ -1,4 +1,7 @@
-import { FIRST_GATE, GAP, GATE_WIDTH, HEIGHT, RADIUS, SPACING, START_X, WIDTH, gate } from "./game.js";
+import {
+  FIRST_GATE, FLAP_INTERVAL, GAP, GATE_WIDTH, GRAVITY, HEIGHT, MAX_FALL_SPEED,
+  RADIUS, SPACING, SPEED, START_X, WIDTH, gate, lift,
+} from "./game.js";
 
 const byId = id => document.getElementById(id);
 const colors = ["#4e7653", "#b7613e", "#497dbc", "#9262ab", "#9b7534", "#237e81", "#b35379", "#687046"];
@@ -8,6 +11,9 @@ let token = localStorage.getItem("spp4-flight");
 let socket, playerId, state, retry;
 let name = "";
 let connected = false;
+let stateAt = 0, lastFrame = 0, lastFlap = -Infinity, delay = 0;
+const pending = [];
+const positions = new Map();
 
 function connect() {
   if (!token && !name) return;
@@ -22,14 +28,20 @@ function connect() {
       token = message.token;
       playerId = message.id;
       connected = true;
+      state = null;
+      positions.clear();
+      delay = 0;
       localStorage.setItem("spp4-flight", token);
       byId("game").hidden = false;
       byId("entry").hidden = true;
       byId("status").textContent = "На связи";
     } else if (message.type === "state") {
-      state = message;
+      receiveState(message);
       render();
+    } else if (message.type === "throttled") {
+      pending.length = 0;
     } else if (message.type === "error" || message.type === "conflict") {
+      pending.length = 0;
       byId("status").textContent = message.message;
       if (message.type === "error") {
         socket = null;
@@ -45,13 +57,64 @@ function connect() {
   current.onclose = () => {
     if (current !== socket) return;
     connected = false;
+    pending.length = 0;
     byId("flap").disabled = true;
     byId("status").textContent = "Связь потеряна. Переподключение…";
     retry = setTimeout(connect, 1000);
   };
 }
 
-function draw(me) {
+function receiveState(message) {
+  state = message;
+  stateAt = performance.now();
+  const me = state.visible.find(player => player.id === playerId);
+  if (!me) return;
+  const accepted = pending.findLastIndex(action => action.run.version <= me.version);
+  if (accepted < 0) return;
+  const sample = Math.min(100, (stateAt - pending[accepted].at) / 2);
+  delay = delay ? (delay + sample) / 2 : sample;
+  pending.splice(0, accepted + 1);
+}
+
+function project(player, elapsed) {
+  if (player.phase !== "flying") return { ...player };
+  const seconds = elapsed / 1000;
+  const accelerated = Math.min(seconds, (MAX_FALL_SPEED - player.vy) / GRAVITY);
+  const distance = (player.vy + GRAVITY * accelerated / 2) * accelerated;
+  const y = player.y + distance + MAX_FALL_SPEED * (seconds - accelerated);
+  return {
+    ...player,
+    x: player.x + SPEED * seconds,
+    y: Math.min(HEIGHT - RADIUS, Math.max(RADIUS, y)),
+    vy: Math.min(MAX_FALL_SPEED, player.vy + GRAVITY * seconds),
+  };
+}
+
+function animate(time) {
+  requestAnimationFrame(animate);
+  if (!connected || !state) return;
+  if (time - pending[0]?.at > 1000) pending.length = 0;
+  const local = pending.at(-1);
+  const elapsed = Math.max(0, Math.min(140, time - stateAt + delay));
+  const blend = 1 - Math.exp(-Math.min(time - lastFrame, 50) / 22);
+  lastFrame = time;
+  const visible = state.visible.map(player => {
+    const target = player.id === playerId && local
+      ? project(local.run, Math.max(0, Math.min(300, time - local.at)))
+      : project(player, elapsed);
+    const past = positions.get(player.id);
+    if (past && Math.abs(target.x - past.x) < 120) {
+      target.x = past.x + (target.x - past.x) * blend;
+      target.y = past.y + (target.y - past.y) * blend;
+    }
+    positions.set(player.id, target);
+    return target;
+  });
+  const me = positions.get(playerId);
+  if (me) draw(me, visible);
+}
+
+function draw(me, visible) {
   const camera = me.x - START_X;
   ctx.fillStyle = "#f3f1e9";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -68,7 +131,7 @@ function draw(me) {
     ctx.fillRect(x - camera, 0, GATE_WIDTH, y - GAP / 2);
     ctx.fillRect(x - camera, y + GAP / 2, GATE_WIDTH, HEIGHT - y - GAP / 2);
   }
-  for (const p of [...state.visible.filter(p => p.id !== playerId), me]) {
+  for (const p of [...visible.filter(p => p.id !== playerId), me]) {
     if (p.x - camera < -RADIUS || p.x - camera > WIDTH + RADIUS) continue;
     ctx.globalAlpha = p.id === playerId ? 1 : .55;
     ctx.fillStyle = colors[p.color];
@@ -83,7 +146,6 @@ let board = "";
 function render() {
   const me = state.visible.find(p => p.id === playerId);
   if (!me) return;
-  draw(me);
   byId("score").textContent = "Счёт " + me.points;
   const labels = { ready: ["Старт", "Пробел, щелчок по трассе или кнопка поднимают шар."],
     flying: ["Поднять шар", "Удерживайте шар между верхней и нижней стенками."],
@@ -107,9 +169,19 @@ function render() {
 
 function flap() {
   const me = state?.visible.find(p => p.id === playerId);
-  if (connected && me && socket?.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: "flap", version: me.version }));
-  }
+  const now = performance.now();
+  if (!connected || !me || socket?.readyState !== WebSocket.OPEN ||
+      pending.length >= 3 || now - lastFlap < FLAP_INTERVAL + 10) return;
+  const previous = pending.at(-1);
+  const run = previous
+    ? project(previous.run, Math.min(300, now - previous.at))
+    : project(me, Math.min(140, now - stateAt + delay));
+  const version = run.version;
+  lift(run);
+  pending.push({ at: now, run });
+  lastFlap = now;
+  byId("status").textContent = "На связи";
+  socket.send(JSON.stringify({ type: "flap", version }));
 }
 byId("join").onsubmit = event => {
   event.preventDefault();
@@ -129,6 +201,9 @@ byId("leave").onclick = () => {
   const previous = socket;
   socket = null;
   connected = false;
+  pending.length = 0;
+  state = null;
+  positions.clear();
   clearTimeout(retry);
   previous?.close();
   localStorage.removeItem("spp4-flight");
@@ -139,4 +214,5 @@ byId("leave").onclick = () => {
   byId("entry").hidden = false;
   byId("status").textContent = "";
 };
+requestAnimationFrame(animate);
 if (token) connect();

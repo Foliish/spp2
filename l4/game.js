@@ -7,9 +7,20 @@ export const FIRST_GATE = 580;
 export const GAP = 170;
 export const GATE_WIDTH = 46;
 export const STEP = 0.025;
+export const SPEED = 155;
+export const GRAVITY = 590;
+export const MAX_FALL_SPEED = 340;
+export const FLAP_INTERVAL = 90;
 
 export function newRun() {
   return { x: START_X, y: HEIGHT / 2, vy: 0, points: 0, phase: "ready", version: 0 };
+}
+
+export function lift(run) {
+  if (run.phase === "over") Object.assign(run, { ...newRun(), version: run.version });
+  run.phase = "flying";
+  run.vy = -245;
+  run.version++;
 }
 
 export function gate(index) {
@@ -18,8 +29,8 @@ export function gate(index) {
 }
 
 export function advance(run) {
-  run.x += 155 * STEP;
-  run.vy = Math.min(340, run.vy + 590 * STEP);
+  run.x += SPEED * STEP;
+  run.vy = Math.min(MAX_FALL_SPEED, run.vy + GRAVITY * STEP);
   run.y += run.vy * STEP;
   const obstacle = gate(run.points);
   const hitsGate = run.x + RADIUS >= obstacle.x &&
