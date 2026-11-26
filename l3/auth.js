@@ -41,6 +41,13 @@ export async function prepareAuth() {
     INSERT INTO users (email, role) VALUES ($1, 'admin')
     ON CONFLICT (email) DO UPDATE SET role = 'admin'
   `, [admin]);
+  if (process.env.DEMO_EDITOR_EMAIL) {
+    const editor = emailAddress(process.env.DEMO_EDITOR_EMAIL);
+    await db.query(`
+      INSERT INTO users (email, role) VALUES ($1, 'editor')
+      ON CONFLICT (email) DO UPDATE SET role = 'editor' WHERE users.role = 'reader'
+    `, [editor]);
+  }
 }
 
 export function requireRole(role) {

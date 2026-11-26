@@ -7,6 +7,7 @@ import { after, before, test } from "node:test";
 import { SMTPServer } from "smtp-server";
 
 const adminEmail = "admin@example.org";
+const editorEmail = "editor@example.org";
 const emails = new Map();
 const smtp = new SMTPServer({
   disabledCommands: ["STARTTLS"],
@@ -41,6 +42,7 @@ before(async () => {
       HOST: "127.0.0.1",
       DATA_DIR: "/tmp/spp-test",
       ADMIN_EMAIL: "",
+      DEMO_EDITOR_EMAIL: editorEmail,
       MAIL_FROM: "",
       SMTP_HOST: "127.0.0.1",
       SMTP_PORT: String(smtp.server.address().port),
@@ -167,7 +169,8 @@ test("почта, одноразовый код, роли, сессии и ог�
 });
 
 test("создание, поиск, версия, изображение и удаление цитаты", async () => {
-  const { token } = await login(adminEmail);
+  const { token, user } = await login(editorEmail);
+  assert.equal(user.role, "editor");
   const data = { text: "Цитата " + randomUUID(), author: "А", category: "Б" };
   const created = await request("/api/quotes", "POST", data, token);
   assert.equal(created.status, 201);

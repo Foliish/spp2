@@ -8,6 +8,7 @@ services:
       SMTP_REQUIRE_TLS: "0"
       MAIL_FROM: demo@jason.test
       ADMIN_EMAIL: admin@jason.test
+      DEMO_EDITOR_EMAIL: editor@jason.test
       DEMO_EMAILS: "admin@jason.test,editor@jason.test,reader@jason.test"
     depends_on:
       mail:
